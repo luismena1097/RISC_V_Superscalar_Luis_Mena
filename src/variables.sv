@@ -99,6 +99,7 @@ typedef struct packed {
 typedef struct packed {
     logic          issueque_ready;
     logic [31:0]   issueque_rs_data;
+    logic [31:0]   issueque_imm;
     logic [31:0]   issueque_rt_data;
     logic [5:0]    issueque_rd_tag;
     logic     		 issueque_opcode;

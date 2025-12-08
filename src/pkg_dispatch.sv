@@ -43,7 +43,7 @@ always_comb begin
 
 	if(rs2_decoded == 'b0)
 		rsv_data_all.rs2_data_valid = 1'b1;
-	else if (rs1_sel_cdb_or_regfile)
+	else if (rs2_sel_cdb_or_regfile)
 		rsv_data_all.rs2_data_valid = 1'b1;
 	else
 		rsv_data_all.rs2_data_valid = ~rs2_valid_plus_tag[6];

@@ -36,7 +36,16 @@ module register_file #(
     end
 
     // Asynchronous read
-    assign Read_data1 = registers_out[Read_reg1];
-    assign Read_data2 = registers_out[Read_reg2];
-
+    always_comb begin
+        if(reg_write)begin
+            if(Read_reg1 == Write_reg)
+                Read_data1 = Write_Data;
+            else if(Read_reg2 == Write_reg)
+                Read_data2 = Write_Data;
+        end
+        else begin
+            Read_data1 = registers_out[Read_reg1];
+            Read_data2 = registers_out[Read_reg2];
+        end
+    end
 endmodule

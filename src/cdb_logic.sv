@@ -23,7 +23,7 @@ module cdb_logic(
 //Keep track of the type of instructions that are currently on the CDB Reservation register
 // empty = 0, int = 1, mem = 2, mult = 3 , div = 4
 logic [2:0] cdb_rsv_inst [6:0];
-logic [1:0] CDB_Selector;
+
 always_ff @(posedge clk or posedge rst) begin
     if(rst)begin
         for (int i = 0; i < 7; i++) begin

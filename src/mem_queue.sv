@@ -25,8 +25,9 @@ module mem_issue_queue #(
     output logic          issueque_ready,
     output logic [31:0]   issueque_rs_data,
     output logic [31:0]   issueque_rt_data,
+    output logic [31:0]   issueque_imm,
     output logic [5:0]    issueque_rd_tag,
-    output logic 		     issueque_opcode,
+    output logic 		  issueque_opcode,
     input  logic          issueblk_done
 );
 
@@ -77,6 +78,7 @@ assign issueque_rs_data  = queue[0].lw_sw_data.common_data.rs1_data;
 assign issueque_rt_data  = queue[0].lw_sw_data.common_data.rs2_data;
 assign issueque_rd_tag   = queue[0].lw_sw_data.common_data.rd_tag;
 assign issueque_opcode   = queue[0].lw_sw_data.load_or_store_signal;
+assign issueque_imm      = queue[0].lw_sw_data.imm;
 
 endmodule
 

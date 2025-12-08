@@ -31,7 +31,7 @@ always_ff @(posedge clk or posedge rst) begin
     end
     else begin
         // WRITES
-        if (!ff_tf & cdb_tag_tf_valid) begin
+        if (!ff_tf && cdb_tag_tf_valid) begin
             fifo[wp[5:0]] <= cdb_tag_tf;
             wp <= wp + 1'b1;
         end

@@ -39,6 +39,8 @@ logic              mem_queue_full;              //Signal to the dispatcher from 
 /*CDB Bus*/
 cdb_bus 				CDB_Bus_w;		//CDB Bus to all modules that need feedback from CDB
 cdb_bus           CDB_Int_exec_w;//CDB with data from int exec unit
+cdb_bus           CDB_Mem_exec_w;//CDB with data from mem exec unit
+cdb_bus           CDB_Mult_exec_w;//CDB with data from mult exec unit
 /*ALU to int queue*/
 logic [3:0]			ALU_Opcode;
 
@@ -242,6 +244,7 @@ mem_issue_queue #(.DEPTH(4)) mem_queue_instance (
    .issueque_ready(mem_data_queue_2_exec_unit.issueque_ready),
    .issueque_rs_data(mem_data_queue_2_exec_unit.issueque_rs_data),
    .issueque_rt_data(mem_data_queue_2_exec_unit.issueque_rt_data),
+   .issueque_imm(mem_data_queue_2_exec_unit.issueque_imm),
    .issueque_rd_tag(mem_data_queue_2_exec_unit.issueque_rd_tag),
    .issueque_opcode(mem_data_queue_2_exec_unit.issueque_opcode),
    .issueblk_done(mem_data_queue_2_exec_unit.issueblk_done)    // Issued-instruction done
@@ -286,6 +289,18 @@ int_exec_unit int_exec_unit_instance(
 	.cdb_int_unit(CDB_Int_exec_w)	
 );	 
 
+mem_exec_unit mem_exec_unit_instance(
+   .mem_data_exec_unit(mem_data_queue_2_exec_unit),
+   .cdb_mem_unit(CDB_Mem_exec_w)	
+);
+
+mult_exec_unit mult_exec_unit_instance(
+   .clk(clk),
+   .rst(rst),
+   .mult_data_exec_unit(mult_data_queue_2_exec_unit),
+   .cdb_mult_unit(CDB_Mult_exec_w)	 
+);
+
 cdb_logic cdb_logic_feedback_instance(
    .clk(clk),
 	.rst(rst),
@@ -295,8 +310,8 @@ cdb_logic cdb_logic_feedback_instance(
    .issue_mem(mem_data_queue_2_exec_unit.issueblk_done),
 
    .CDB_Int(CDB_Int_exec_w),
-   .CDB_Mem(),
-   .CDB_Mult(),
+   .CDB_Mem(CDB_Mem_exec_w),
+   .CDB_Mult(CDB_Mult_exec_w),
    .CDB_Div(),
 
    .CDB_output(CDB_Bus_w)  	

@@ -135,11 +135,29 @@ register_file #(.ADDR(5), .WIDTH(32))RegFile_module(
 
 /* Dispatcher to reservation stations*/
 //Mux for RS1 from RegFile or from CDB
-assign sel_data_rs1 = cdb_valid && ({1'b1,cdb_tag} == {rs1_valid_w,rs1_tag_W});
+
+always_comb begin
+    sel_data_rs1 = 1'b0;
+    if (cdb_valid) begin
+        if ((rs1_valid_w == 1'b1) && (rs1_tag_W == cdb_tag)) begin
+            sel_data_rs1 = 1'b1;
+        end
+    end
+end
+
+//assign sel_data_rs1 = cdb_valid && ({1'b1,cdb_tag} == {rs1_valid_w,rs1_tag_W});
 assign rs1_data_dispatcher = sel_data_rs1 ? cdb_data : RS1_regfile;
 
 //Mux for RS2 from RegFile or from CDB
-assign sel_data_rs2 = cdb_valid && ({1'b1,cdb_tag} == {rs2_valid_w,rs2_tag_W});
+always_comb begin
+    sel_data_rs2 = 1'b0;
+    if (cdb_valid) begin
+        if ((rs2_valid_w == 1'b1) && (rs2_tag_W == cdb_tag)) begin
+            sel_data_rs2 = 1'b1;
+        end
+    end
+end
+//assign sel_data_rs2 = cdb_valid && ({1'b1,cdb_tag} == {rs2_valid_w,rs2_tag_W});
 assign rs2_data_dispatcher = sel_data_rs2 ? cdb_data : RS2_regfile;
 
 //Module to create the package for the queues

@@ -11,7 +11,7 @@ module decoder(
     output logic [6:0] Opcode,
     output logic [2:0] Func3,
     output logic [6:0] Func7,
-	 output logic rd_en
+	output logic rd_en
 );
 /*
 localparam logic [6:0] R_TYPE = 7'b0110011; 

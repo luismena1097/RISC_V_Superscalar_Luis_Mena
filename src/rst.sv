@@ -8,24 +8,24 @@ module rst(
     input  logic                rst,
 	 //Write Port 0
 	 input logic [6:0]			  wdata0_rst,
-    input logic [4:0]			  waddr0_rst,
-	 input logic 				     wen0_rst,
+     input logic [4:0]			  waddr0_rst,
+	 input logic 				  wen0_rst,
 	 //Write Port 1
 	 input logic [6:0]			  wdata1_rst,
-	 input logic [31:0] 			  wen1_rst,
+	 input logic [31:0] 		  wen1_rst,
 	 //RS - RS1 Port
 	 input logic [4:0]			  rsaddr_rst,
 	 output logic [5:0]			  rstag_rst,
-	 output logic 					  rsvalid_rst,
+	 output logic 				  rsvalid_rst,
 	 //RT - RS2 Port
 	 input logic [4:0]			  rtaddr_rst,
 	 output logic [5:0]			  rttag_rst,
-	 output logic 					  rtvalid_rst,
+	 output logic 				  rtvalid_rst,
 	 //CDB
-	 input logic					  cdb_valid,
+	 input logic				  cdb_valid,
 	 input logic [5:0] 			  cdb_tag_rst,
-	 output logic [4:0] 		  	  rd_regfile_rst,
-	 output logic 					  write_en_regfile
+	 output logic [4:0] 		  rd_regfile_rst,
+	 output logic 				  write_en_regfile
 );
 //RST
 reg [6:0] registers [0:31];
@@ -56,7 +56,7 @@ always_comb begin
 				  write_en_regfile = 1'b1;
 				  // Evitar borrar si justo se está escribiendo ese registro
 				  if (!((waddr0_rst == i[4:0]) && wen0_rst))
-						cdb_clear_addr = i[4:0];
+				  	cdb_clear_addr = i[4:0];
 			 end
 		end
   end
