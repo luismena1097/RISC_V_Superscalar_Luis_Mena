@@ -49,7 +49,7 @@ always_comb begin
     issue_mem    = 1'b0;
     issue_oneclk = 1'b0;
 
-    if(ready_div && !CDB_reservation_reg[6] && !div_exec_ready)
+    if(ready_div && !CDB_reservation_reg[6] && div_exec_ready == 1'b0)
         issue_div = 1'b1;
     //Check for CDB Reservation register to be free at slot 4 before entering multiplication to slot 3 
     else if(ready_mult && !CDB_reservation_reg[4] && !CDB_reservation_reg[3])

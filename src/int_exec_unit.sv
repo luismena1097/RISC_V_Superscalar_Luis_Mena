@@ -44,6 +44,9 @@ always_comb begin
 		case (Opcode)
 			B_TYPE: begin
 				cdb_int_unit.cdb_branch = 1'b1;
+				cdb_int_unit.cdb_valid	= 1'b0;
+				cdb_int_unit.cdb_data	= 'b0;
+				cdb_int_unit.cdb_tag	= 'b0;
 				if(Funct3 == 'b0)
 					cdb_int_unit.cdb_branch_taken = alu_zero_w ? 'b1 : 'b0;
 				else if(Funct3 == 'b1)

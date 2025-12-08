@@ -23,7 +23,8 @@ logic [31:0]       Jmp_branch_address;		//Jump or branch address from the dispat
 logic              jmp_branch_valid;		//Jump or branch are valid
 logic [31:0]       Instr;			//Instruction to the dispatcher to be decoded
 logic              empty;			//Signal from the IFQ to the dispacher to let know that there IFQ is empty
-	 
+logic              branch_nt_next_inst;
+
 /*Dispatcher to queue signals*/
 logic					 en_div_dispatch;		//Signal to let know the div queue that dispatcher has an instruction of this type
 logic 				 en_mult_dispatch;	//Signal to let know the mult queue that dispatcher has an instruction of this type
@@ -41,6 +42,7 @@ cdb_bus 				CDB_Bus_w;		//CDB Bus to all modules that need feedback from CDB
 cdb_bus           CDB_Int_exec_w;//CDB with data from int exec unit
 cdb_bus           CDB_Mem_exec_w;//CDB with data from mem exec unit
 cdb_bus           CDB_Mult_exec_w;//CDB with data from mult exec unit
+cdb_bus           CDB_div_exec_w; //CDB with data from div exec unit
 /*ALU to int queue*/
 logic [3:0]			ALU_Opcode;
 
@@ -49,6 +51,9 @@ int_issue_data_exec_unit int_data_queue_2_exec_unit;
 int_data_exec_unit mult_data_queue_2_exec_unit;
 int_data_exec_unit div_data_queue_2_exec_unit;
 mem_data_exec_unit mem_data_queue_2_exec_unit;
+
+/*Signal for divider busy*/
+logic             div_exec_unit_busy_w;
 
 /*Memory cache for instructions*/
 //This cache outputs 4 instructions (4x32 = 128 bits)
@@ -72,6 +77,7 @@ ifq #(.DATA_WIDTH(32), .CACHE_LINE_WIDTH(128), .FIFO_DEPTH(4)) ifq_instance (
    .rd_en(rd_en),
    .Jmp_branch_address(Jmp_branch_address),
    .jmp_branch_valid(jmp_branch_valid),
+   //.branch_nt_next_inst(branch_nt_next_inst),
 
    .PC_in(PC_in),
 	.PC_out(PC_out),
@@ -111,7 +117,8 @@ dispatcher dispatcher_instance(
 	.dispatcher_2_int_queue(dispatcher_2_int_queue),
 	.dispatcher_2_lw_sw_queue(dispatcher_2_lw_sw_queue),
 	.dispatcher_2_mult_or_div(dispatcher_2_mult_or_div),
-	
+
+   .branch_nt_next_inst(branch_nt_next_inst),	
 	.issueque_int_full(int_queue_full)
 );
 
@@ -267,7 +274,7 @@ issue_unit issue_unit_instance(
     .ready_mem(mem_data_queue_2_exec_unit.issueque_ready),
 
     //From division execution unit
-    .div_exec_ready(),
+    .div_exec_ready(div_exec_unit_busy_w),
    
     //To the queues to let know that execution unit is free and can execute another instruction
     .issue_int(int_data_queue_2_exec_unit.issueblk_done),
@@ -301,6 +308,15 @@ mult_exec_unit mult_exec_unit_instance(
    .cdb_mult_unit(CDB_Mult_exec_w)	 
 );
 
+div_exec_unit div_exec_unit_instance(
+   .clk(clk),
+   .rst(rst),
+   .div_data_exec_unit(div_data_queue_2_exec_unit),
+
+   .cdb_div_unit(CDB_div_exec_w),
+   .div_exec_unit_busy(div_exec_unit_busy_w)	 
+);
+
 cdb_logic cdb_logic_feedback_instance(
    .clk(clk),
 	.rst(rst),
@@ -312,7 +328,7 @@ cdb_logic cdb_logic_feedback_instance(
    .CDB_Int(CDB_Int_exec_w),
    .CDB_Mem(CDB_Mem_exec_w),
    .CDB_Mult(CDB_Mult_exec_w),
-   .CDB_Div(),
+   .CDB_Div(CDB_div_exec_w),
 
    .CDB_output(CDB_Bus_w)  	
 );

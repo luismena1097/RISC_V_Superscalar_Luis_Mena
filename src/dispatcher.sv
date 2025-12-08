@@ -30,9 +30,13 @@ module dispatcher(
 	 output int_queue_data 			dispatcher_2_int_queue,
 	 output lw_sw_queue_data 		dispatcher_2_lw_sw_queue,
 	 output queue_data				dispatcher_2_mult_or_div,
+
+	 output logic 					branch_nt_next_inst,
 	 
 	 input logic 					issueque_int_full
 );
+//Wire for stalling 1 cycle for jump
+logic stall_branch;
 
 //Wire for decoding the instruction
 logic [4:0]  instr_rs1_addr, instr_rs2_addr, instr_rd_addr;
@@ -169,6 +173,7 @@ pkg_dispatch pkg_dispatch_module(
 	.rs1_valid_plus_tag({rs1_valid_w,rs1_tag_W}), .rs2_valid_plus_tag({rs2_valid_w,rs2_tag_W}),
 	.rd_tag(Tagout_tf_W),
 	.branch_jump_address(Branch_jump_addr_w),
+	.stall_branch(stall_branch),
 
 	.dispatcher_2_int_queue(dispatcher_2_int_queue),
 	.dispatcher_2_lw_sw_queue(dispatcher_2_lw_sw_queue),
@@ -180,7 +185,22 @@ pkg_dispatch pkg_dispatch_module(
 	.en_int_dispatch(en_int_dispatch)
 );
 
-assign dispatch_ren = cdb_branch | ~branch_signal_W | ~issueque_int_full;
+always_ff @(posedge clk or posedge rst) begin
+    if (rst) begin
+        stall_branch <= 1'b0;
+    end 
+    else if (cdb_branch) begin
+        // Branch resuelto, se libera el stall
+        stall_branch <= 1'b0;
+    end 
+    else if (branch_signal_W) begin
+        // Se detectó un branch → hacer stall por 1 ciclo
+        stall_branch <= 1'b1;
+    end 
+    // else: se mantiene el valor (no poner nada)
+end
+
+assign dispatch_ren = ~stall_branch;
 //assign dispatch_jump_branch = jump_signal_w | cdb_branch_taken;
 assign dispatch_jmp_branch_addr = Branch_jump_addr_w;
 
@@ -193,5 +213,7 @@ always_comb begin
 	else 
 		dispatch_jump_branch = 1'b0;
 end
+
+assign branch_nt_next_inst = (cdb_branch == 1'b1) && (cdb_branch_taken == 1'b0) ? 1:0;
 
 endmodule

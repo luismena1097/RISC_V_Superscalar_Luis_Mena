@@ -1,5 +1,5 @@
 /*
-	Description: Integer execution unit with ALU
+	Description: Mult execution unit
 	Author: Luis Alberto Mena González
 */
 `include "variables.sv"				//Data types to make easier the instantiation of modules
@@ -37,7 +37,7 @@ always_comb begin
 end
 
 /* Fake latency to simulate a real multiplier that is not ready in 1 cycle*/
-//For this project we are assuming that multiplication takes 3 cycles
+//For this project we are assuming that multiplication takes 4 cycles
 
 always_ff @(posedge clk or posedge rst) begin
     if (rst)
