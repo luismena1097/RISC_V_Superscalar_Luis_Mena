@@ -38,12 +38,12 @@ logic 				 div_queue_full;	            //Signal to the dispatcher from the div q
 logic              mem_queue_full;              //Signal to the dispatcher from the mem queue that it is full
 /*CDB Bus*/
 cdb_bus 				CDB_Bus_w;		//CDB Bus to all modules that need feedback from CDB
-
+cdb_bus           CDB_Int_exec_w;//CDB with data from int exec unit
 /*ALU to int queue*/
 logic [3:0]			ALU_Opcode;
 
 /*Queue to issue unit*/
-int_data_exec_unit int_data_queue_2_exec_unit;
+int_issue_data_exec_unit int_data_queue_2_exec_unit;
 int_data_exec_unit mult_data_queue_2_exec_unit;
 int_data_exec_unit div_data_queue_2_exec_unit;
 mem_data_exec_unit mem_data_queue_2_exec_unit;
@@ -113,11 +113,6 @@ dispatcher dispatcher_instance(
 	.issueque_int_full(int_queue_full)
 );
 
-ALU_control alu_control_instance (
-	.Opcode(dispatcher_2_int_queue.opcode), .Funct7(dispatcher_2_int_queue.func3), .Funct3(dispatcher_2_int_queue.func7),
-   .ALU_op(ALU_Opcode)
-);
-
 //Integer issue queue
 integer_issue_queue #(.DEPTH(4)) integer_queue_instance (
 	.clk(clk),
@@ -133,8 +128,10 @@ integer_issue_queue #(.DEPTH(4)) integer_queue_instance (
    .dispatch_rt_data(dispatcher_2_int_queue.common_data.rs2_data),
    .dispatch_rt_tag(dispatcher_2_int_queue.common_data.rs2_tag),
    .dispatch_rt_data_val(dispatcher_2_int_queue.common_data.rs2_data_valid),
-   //Opcode for the ALU
-   .dispatch_opcode(ALU_Opcode),
+   //Opcode, Funct3 and Funct7 for the ALU
+   .dispatch_opcode(dispatcher_2_int_queue.opcode),
+   .dispatch_func3(dispatcher_2_int_queue.func3),
+   .dispatch_func7(dispatcher_2_int_queue.func7),
    //RD TAG
    .dispatch_rd_tag(dispatcher_2_int_queue.common_data.rd_tag),
    .issueque_full(int_queue_full),
@@ -150,11 +147,13 @@ integer_issue_queue #(.DEPTH(4)) integer_queue_instance (
    .issueque_rt_data(int_data_queue_2_exec_unit.issueque_rt_data),
    .issueque_rd_tag(int_data_queue_2_exec_unit.issueque_rd_tag),
    .issueque_opcode(int_data_queue_2_exec_unit.issueque_opcode),
+   .issueque_funct3(int_data_queue_2_exec_unit.func3),
+   .issueque_funct7(int_data_queue_2_exec_unit.func7),
    .issueblk_done(int_data_queue_2_exec_unit.issueblk_done)    // Issued-instruction done
 );
 
 //Mult issue queue
-integer_issue_queue #(.DEPTH(4)) mult_queue_instance (
+queue #(.DEPTH(4)) mult_queue_instance (
 	.clk(clk),
 	.reset(rst),
 
@@ -189,7 +188,7 @@ integer_issue_queue #(.DEPTH(4)) mult_queue_instance (
 );
 
 //Div issue queue
-integer_issue_queue #(.DEPTH(4)) div_queue_instance (
+queue #(.DEPTH(4)) div_queue_instance (
 	.clk(clk),
 	.reset(rst),
 
@@ -248,5 +247,60 @@ mem_issue_queue #(.DEPTH(4)) mem_queue_instance (
    .issueblk_done(mem_data_queue_2_exec_unit.issueblk_done)    // Issued-instruction done
 );
 
-	 
+//CDB logic 
+//Issue unit + Execution Units + CDB Mux  
+
+//Issue Unit
+//It is the module that checks which queue has an instruction ready and if the CDB Reservation Register 
+//has space to start the execution of the instruction. 
+
+issue_unit issue_unit_instance(
+   .clk(clk),
+   .rst(rst),
+    //From queues to let know the issue unit that an instruction is ready to be executed
+    .ready_int(int_data_queue_2_exec_unit.issueque_ready),
+    .ready_mult(mult_data_queue_2_exec_unit.issueque_ready),
+    .ready_div(div_data_queue_2_exec_unit.issueque_ready),
+    .ready_mem(mem_data_queue_2_exec_unit.issueque_ready),
+
+    //From division execution unit
+    .div_exec_ready(),
+   
+    //To the queues to let know that execution unit is free and can execute another instruction
+    .issue_int(int_data_queue_2_exec_unit.issueblk_done),
+    .issue_mult(mult_data_queue_2_exec_unit.issueblk_done),
+    .issue_div(div_data_queue_2_exec_unit.issueblk_done),
+    .issue_mem(mem_data_queue_2_exec_unit.issueblk_done)
+);
+
+//Integer execution unit
+int_exec_unit int_exec_unit_instance(
+   .issue_int(int_data_queue_2_exec_unit.issueblk_done),
+	.Opcode(int_data_queue_2_exec_unit.issueque_opcode),
+	.Funct3(int_data_queue_2_exec_unit.func3),
+   .Funct7(int_data_queue_2_exec_unit.func7),
+	.RS1(int_data_queue_2_exec_unit.issueque_rs_data), 
+   .RS2(int_data_queue_2_exec_unit.issueque_rt_data),
+	.RD_Tag(int_data_queue_2_exec_unit.issueque_rd_tag),
+	
+	.cdb_int_unit(CDB_Int_exec_w)	
+);	 
+
+cdb_logic cdb_logic_feedback_instance(
+   .clk(clk),
+	.rst(rst),
+   .issue_int(int_data_queue_2_exec_unit.issueblk_done),
+   .issue_mult(mult_data_queue_2_exec_unit.issueblk_done),
+   .issue_div(div_data_queue_2_exec_unit.issueblk_done),
+   .issue_mem(mem_data_queue_2_exec_unit.issueblk_done),
+
+   .CDB_Int(CDB_Int_exec_w),
+   .CDB_Mem(),
+   .CDB_Mult(),
+   .CDB_Div(),
+
+   .CDB_output(CDB_Bus_w)  	
+);
+
+
 endmodule

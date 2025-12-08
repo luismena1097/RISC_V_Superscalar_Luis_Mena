@@ -122,7 +122,7 @@ assign dispatcher_2_lw_sw_queue.common_data = rsv_data_all;
 assign dispatcher_2_lw_sw_queue.func3		 = Func3;
 assign dispatcher_2_lw_sw_queue.imm		 = Imm;
 //If instruction is sw this signal = 1 if it is lw this signal = 0
-assign dispatcher_2_lw_sw_queue.lw_or_sw_instruction = (Opcode == LW) ? 1'b0 : 1'b1;
+assign dispatcher_2_lw_sw_queue.load_or_store_signal = (Opcode == LW) ? 1'b0 : 1'b1;
 
 //Assembling package for div or mult queue
 assign dispatcher_2_mult_or_div = rsv_data_all;

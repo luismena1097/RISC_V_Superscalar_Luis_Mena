@@ -52,6 +52,15 @@ I_TYPE: begin
 		 default: ALU_op = 4'b0000;
 	endcase
 end
+B_TYPE: begin
+	unique case (Funct3)
+		3'b000: ALU_op = 4'b0001; // SUBB BEQ
+		3'b001: ALU_op = 4'b0001; // SUBB BNE
+		3'b100: ALU_op = 4'b0100; // SLTIU BLT
+		3'b101: ALU_op = 4'b0100;  // SLTIU BGE
+		default: ALU_op = 4'b0000;
+	endcase
+end
 default: ALU_op = 4'b0000;
 endcase
 end

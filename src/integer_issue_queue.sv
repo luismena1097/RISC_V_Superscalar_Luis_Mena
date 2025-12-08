@@ -4,7 +4,7 @@
 */
 
 `include "variables.sv"				//Data types to make easier the instantiation of modules
-module queue #(
+module integer_issue_queue #(
     parameter DEPTH = 4
 ) (
     input  logic          clk,
@@ -20,8 +20,10 @@ module queue #(
     input  logic [31:0]   dispatch_rt_data,
     input  logic [5:0]    dispatch_rt_tag,
     input  logic          dispatch_rt_data_val,
-    //Opcode for the ALU
-    input  logic [3:0]    dispatch_opcode,
+    //Opcode, Funct3 and Funct7 for the ALU
+    input  logic [6:0]    dispatch_opcode,
+    input  logic [2:0]    dispatch_func3,
+    input  logic [6:0]    dispatch_func7,
     //RD TAG
     input  logic [5:0]    dispatch_rd_tag,
     output logic          issueque_full,
@@ -36,11 +38,13 @@ module queue #(
     output logic [31:0]   issueque_rs_data,
     output logic [31:0]   issueque_rt_data,
     output logic [5:0]    issueque_rd_tag,
-    output logic [2:0]    issueque_opcode,
+    output logic [6:0]    issueque_opcode,
+    output logic [2:0]    issueque_funct3,
+    output logic [6:0]    issueque_funct7,
     input  logic          issueblk_done    // Issued-instruction done
 );
 
-entry_issue_queue_t queue [DEPTH];
+entry_int_issue_queue_t queue [DEPTH];
 
 logic [DEPTH-1:0] instruction_ready;        //To track valid of each instruction of the queue
 
@@ -65,6 +69,8 @@ always_ff @(posedge clk or posedge reset) begin
 			 queue[0].valid   <= 1'b1;
 			 queue[0].rd_tag  <= dispatch_rd_tag;
 			 queue[0].opcode  <= dispatch_opcode;
+             queue[0].func3   <= dispatch_func3;
+             queue[0].func7   <= dispatch_func7;
 			 queue[0].rs_data <= dispatch_rs_data;
 			 queue[0].rs_tag  <= dispatch_rs_tag;
 			 queue[0].rs_val  <= dispatch_rs_data_val;
@@ -117,6 +123,8 @@ always_comb begin
 	issueque_rt_data  = 'b0;
 	issueque_rd_tag   = 'b0;
 	issueque_opcode   = 'b0;
+    issueque_funct3   = 'b0;
+    issueque_funct7   = 'b0;
 	shift_after_issue = 'b0;
   for (int i=0; i<DEPTH; i++) begin
 		if (instruction_ready[i]) begin
@@ -124,6 +132,8 @@ always_comb begin
 			 issueque_rt_data  = queue[i].rt_data;
 			 issueque_rd_tag   = queue[i].rd_tag;
 			 issueque_opcode   = queue[i].opcode;
+             issueque_funct3   = queue[i].func3;
+             issueque_funct7   = queue[i].func7;
 			 shift_after_issue = i;
 		end
   end

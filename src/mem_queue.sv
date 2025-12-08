@@ -76,7 +76,7 @@ assign issueque_ready    = queue[0].valid && queue[0].lw_sw_data.common_data.rs1
 assign issueque_rs_data  = queue[0].lw_sw_data.common_data.rs1_data;
 assign issueque_rt_data  = queue[0].lw_sw_data.common_data.rs2_data;
 assign issueque_rd_tag   = queue[0].lw_sw_data.common_data.rd_tag;
-assign issueque_opcode   = queue[0].lw_sw_data.lw_or_sw_instruction;
+assign issueque_opcode   = queue[0].lw_sw_data.load_or_store_signal;
 
 endmodule
 

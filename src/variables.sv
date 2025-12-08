@@ -33,7 +33,7 @@ typedef struct packed {
 typedef struct packed {
 	queue_data common_data;
 	logic [31:0] imm;
-	logic lw_or_sw_instruction;
+	logic load_or_store_signal;
 	logic [2:0] func3;
 } lw_sw_queue_data;
 
@@ -50,18 +50,20 @@ typedef struct packed {
     logic [31:0]   issueque_rs_data;
     logic [31:0]   issueque_rt_data;
     logic [5:0]    issueque_rd_tag;
-    logic [2:0]    issueque_opcode;
+    logic [6:0]    issueque_opcode;
+    logic [2:0]    func3;
+    logic [6:0]    func7;
     logic          issueblk_done;    // Issued-instruction done
-} int_data_exec_unit;
+} int_issue_data_exec_unit;
 
 typedef struct packed {
     logic          issueque_ready;
     logic [31:0]   issueque_rs_data;
     logic [31:0]   issueque_rt_data;
     logic [5:0]    issueque_rd_tag;
-    logic     		 issueque_opcode;
+    logic [2:0]    issueque_opcode;
     logic          issueblk_done;    // Issued-instruction done
-} mem_data_exec_unit;
+} int_data_exec_unit;
 
 typedef struct packed {
    logic        valid;
@@ -77,7 +79,30 @@ typedef struct packed {
 
 typedef struct packed {
    logic        valid;
+   logic [6:0]  opcode;
+   logic [2:0]  func3;
+   logic [6:0]  func7;
+   logic [5:0]  rd_tag;
+   logic [5:0]  rs_tag;
+   logic [31:0] rs_data;
+   logic        rs_val;
+   logic [5:0]  rt_tag;
+   logic [31:0] rt_data;
+   logic        rt_val;
+} entry_int_issue_queue_t;
+
+typedef struct packed {
+   logic        valid;
    lw_sw_queue_data lw_sw_data;
 } entry_issue_mem_queue_t;
+
+typedef struct packed {
+    logic          issueque_ready;
+    logic [31:0]   issueque_rs_data;
+    logic [31:0]   issueque_rt_data;
+    logic [5:0]    issueque_rd_tag;
+    logic     		 issueque_opcode;
+    logic          issueblk_done;    // Issued-instruction done
+} mem_data_exec_unit;
 
 `endif
