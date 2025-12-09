@@ -32,7 +32,7 @@ assign Func7 = Instruction[31:25];
 
 always_comb begin
 	case(Opcode)
-		R_TYPE, I_TYPE, U_TYPE, J_TYPE: rd_en = (RD != 0) ? 1'b1:1'b0;
+		R_TYPE, I_TYPE, U_TYPE, J_TYPE, LW: rd_en = (RD != 0) ? 1'b1:1'b0;
 		default : rd_en = 1'b0;
 	endcase
 end

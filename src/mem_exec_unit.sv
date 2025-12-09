@@ -6,6 +6,7 @@
 
 module mem_exec_unit(
     input mem_data_exec_unit  mem_data_exec_unit,
+    input logic clk,
     output cdb_bus		cdb_mem_unit	
 );
 

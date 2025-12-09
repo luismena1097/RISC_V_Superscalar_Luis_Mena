@@ -301,6 +301,7 @@ int_exec_unit int_exec_unit_instance(
 
 mem_exec_unit mem_exec_unit_instance(
    .mem_data_exec_unit(mem_data_queue_2_exec_unit),
+   .clk(clk),
    .cdb_mem_unit(CDB_Mem_exec_w)	
 );
 

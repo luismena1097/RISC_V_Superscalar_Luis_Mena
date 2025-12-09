@@ -48,9 +48,9 @@ always_comb begin
 				cdb_int_unit.cdb_data	= 'b0;
 				cdb_int_unit.cdb_tag	= 'b0;
 				if(Funct3 == 'b0)
-					cdb_int_unit.cdb_branch_taken = alu_zero_w ? 'b1 : 'b0;
-				else if(Funct3 == 'b1)
 					cdb_int_unit.cdb_branch_taken = alu_zero_w ? 'b0 : 'b1;
+				else if(Funct3 == 'b1)
+					cdb_int_unit.cdb_branch_taken = alu_zero_w ? 'b1 : 'b0;
 			end
 			default: cdb_int_unit.cdb_branch = 'b0;
 		endcase
