@@ -4,20 +4,22 @@
 */
 
 module ifq #(parameter DATA_WIDTH=32, CACHE_LINE_WIDTH=128, FIFO_DEPTH=4)(
-input logic 								clk,
-input logic 								rst,
-input logic [CACHE_LINE_WIDTH-1:0] 	D_out,
-input logic									d_out_valid,
-input logic 								rd_en,
+input logic 							clk,
+input logic 							rst,
+input logic [CACHE_LINE_WIDTH-1:0] 	    D_out,
+input logic								d_out_valid,
+input logic 							rd_en,
 input logic [DATA_WIDTH-1:0]			Jmp_branch_address,
-input logic 								jmp_branch_valid,
+input logic 							jmp_branch_valid,
+input logic                             branch_nt_next_inst,
+input logic                             branch_signal,
 
 output logic [DATA_WIDTH-1:0]			PC_in, 								
 output logic [DATA_WIDTH-1:0]			PC_out, 		
 output logic [DATA_WIDTH-1:0]			Instr,
-output logic 								rd_en_o,
-output logic								abort,
-output logic 								empty 		
+output logic 							rd_en_o,
+output logic							abort,
+output logic 							empty 		
 );
 
 logic [CACHE_LINE_WIDTH-1:0] FIFO_out;		//FIFO OUT
@@ -30,6 +32,8 @@ logic [DATA_WIDTH-1:0] PC_in_Plus_16;
 logic [DATA_WIDTH-1:0] PC_in_reg;
 logic 					  fifo_full;
 logic [DATA_WIDTH-1:0] PC_out_i_w;
+logic [DATA_WIDTH-1:0] IFQ_after_bnt;
+logic [DATA_WIDTH-1:0] IFQ_bnt;
 /**************************************************************** PC ****************************************************************/
 
 //Program Counter to be used depending if there is a Jump or a Branch
@@ -41,10 +45,10 @@ assign PC_in_Plus_16 = PC_in + 'h10;
 //Program Counter to fetch instructions
 pc #(.WIDTH(DATA_WIDTH))program_counter_fetch(.clk(clk), .rst(rst), .enable(~fifo_full), .Data_i(PC_in_Plus_16), .Data_o(PC_in_reg));
 
-assign PC_out_i_w = jmp_branch_valid ? Jmp_branch_address : (PC_out + 'h4);
+assign PC_out_i_w = branch_signal ? Jmp_branch_address : (PC_out + 'h4);
 
 //Program Counter to do the calculation of the jump/branch
-pc #(.WIDTH(DATA_WIDTH))program_counter_out(.clk(clk), .rst(rst), .enable(rd_en | jmp_branch_valid ), .Data_i(PC_out_i_w), .Data_o(PC_out));
+pc #(.WIDTH(DATA_WIDTH))program_counter_out(.clk(clk), .rst(rst), .enable((rd_en | jmp_branch_valid)), .Data_i(PC_out_i_w), .Data_o(PC_out));
 
 /**************************************************************** PC ****************************************************************/
 
@@ -55,7 +59,7 @@ fifo_ifq #(.CACHE_LINE_WIDTH(CACHE_LINE_WIDTH), .FIFO_DEPTH(FIFO_DEPTH)) ifq_FIF
 .Data_in(D_out),							//From cache
 .flush(jmp_branch_valid),
 .Jmp_Branch_Bits_2_3(Jmp_branch_address[3:2]),
-.fifo_write_en(d_out_valid),
+.fifo_write_en(d_out_valid && rd_en),
 .read_instruction(rd_en),
 
 .fifo_full(fifo_full),
@@ -84,20 +88,33 @@ mux4_1 #(.WIDTH(32)) mux_1st_instr (
 .Data_o(IFQ_mux_1st_instr) 
 );
 
-//Bypass MUX between the output of the FIFO or the first instruction in case the FIFO is empty
-//always_comb begin IFQ_mux_1st_or_FIFO_inst = empty ? IFQ_mux_1st_instr : IFQ_mux_2_bypass_mux; end
+mux4_1 #(.WIDTH(32)) mux_bnt_instr (
+.Data0(FIFO_out[31:0]), 
+.Data1(FIFO_out[63:32]), 
+.Data2(FIFO_out[95:64]),
+.Data3(FIFO_out[127:96]), 
+.sel(rp[1:0] + 2'h1),  
+.Data_o(IFQ_bnt) 
+);
 
-always_comb begin
-    if (empty && d_out_valid) begin //Bypass
-        IFQ_mux_1st_or_FIFO_inst = IFQ_mux_1st_instr; 
-    end else if (!empty) begin     
-        IFQ_mux_1st_or_FIFO_inst = IFQ_mux_2_bypass_mux; 
-    end else begin
-        IFQ_mux_1st_or_FIFO_inst = '0;
-    end
+//Bypass MUX between the output of the FIFO or the first instruction in case the FIFO is empty
+always_comb begin 
+    IFQ_mux_1st_or_FIFO_inst = 'b0;
+    if(empty && d_out_valid)
+        IFQ_mux_1st_or_FIFO_inst = IFQ_mux_1st_instr;
+    else
+        IFQ_mux_1st_or_FIFO_inst = IFQ_mux_2_bypass_mux;
+end
+//In case the branch was not taken 
+always_comb begin 
+    IFQ_after_bnt = 'b0;
+    if(branch_nt_next_inst)
+        IFQ_after_bnt = IFQ_bnt;
+    else
+        IFQ_after_bnt = IFQ_mux_1st_or_FIFO_inst;
 end
 
-assign Instr = IFQ_mux_1st_or_FIFO_inst;
+assign Instr = IFQ_after_bnt;
 assign rd_en_o = ~fifo_full;
 assign abort = 1'b0;
 

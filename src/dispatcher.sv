@@ -32,6 +32,7 @@ module dispatcher(
 	 output queue_data				dispatcher_2_mult_or_div,
 
 	 output logic 					branch_nt_next_inst,
+	 output logic 					branch_signal,
 	 
 	 input logic 					issueque_int_full
 );
@@ -204,16 +205,24 @@ assign dispatch_ren = ~stall_branch;
 //assign dispatch_jump_branch = jump_signal_w | cdb_branch_taken;
 assign dispatch_jmp_branch_addr = Branch_jump_addr_w;
 
-
-always_comb begin
+always_ff @(posedge clk or posedge rst) begin
 	if(rst)
-		dispatch_jump_branch = 1'b0;
+		dispatch_jump_branch <= 1'b0;
 	else if(jump_signal_w | cdb_branch_taken)
-		dispatch_jump_branch = 1'b1;
+		dispatch_jump_branch <= 1'b1;
 	else 
-		dispatch_jump_branch = 1'b0;
+		dispatch_jump_branch <= 1'b0;
 end
 
-assign branch_nt_next_inst = (cdb_branch == 1'b1) && (cdb_branch_taken == 1'b0) ? 1:0;
+always_comb begin 
+	branch_nt_next_inst = 'b0;
+	if((cdb_branch == 1'b1) && (cdb_branch_taken == 1'b0))
+		branch_nt_next_inst = 'b1;
+	else 
+		branch_nt_next_inst = 'b0;
+end
+
+//assign branch_nt_next_inst = (cdb_branch == 1'b1) && (cdb_branch_taken == 1'b0) ? 1:0;
+assign branch_signal = branch_signal_W;
 
 endmodule

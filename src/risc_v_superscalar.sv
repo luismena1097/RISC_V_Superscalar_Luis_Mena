@@ -24,6 +24,7 @@ logic              jmp_branch_valid;		//Jump or branch are valid
 logic [31:0]       Instr;			//Instruction to the dispatcher to be decoded
 logic              empty;			//Signal from the IFQ to the dispacher to let know that there IFQ is empty
 logic              branch_nt_next_inst;
+logic              branch_signal;
 
 /*Dispatcher to queue signals*/
 logic					 en_div_dispatch;		//Signal to let know the div queue that dispatcher has an instruction of this type
@@ -77,7 +78,8 @@ ifq #(.DATA_WIDTH(32), .CACHE_LINE_WIDTH(128), .FIFO_DEPTH(4)) ifq_instance (
    .rd_en(rd_en),
    .Jmp_branch_address(Jmp_branch_address),
    .jmp_branch_valid(jmp_branch_valid),
-   //.branch_nt_next_inst(branch_nt_next_inst),
+   .branch_nt_next_inst(branch_nt_next_inst),
+	.branch_signal(branch_signal),
 
    .PC_in(PC_in),
 	.PC_out(PC_out),
@@ -119,6 +121,7 @@ dispatcher dispatcher_instance(
 	.dispatcher_2_mult_or_div(dispatcher_2_mult_or_div),
 
    .branch_nt_next_inst(branch_nt_next_inst),	
+   .branch_signal(branch_signal),
 	.issueque_int_full(int_queue_full)
 );
 
