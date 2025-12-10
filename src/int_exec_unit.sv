@@ -41,6 +41,7 @@ always_comb begin
 		cdb_int_unit.cdb_data	= ALU_Result_w;
 		cdb_int_unit.cdb_tag	= RD_Tag;
 		cdb_int_unit.cdb_valid	= 1'b1;
+		cdb_int_unit.cdb_branch = 'b0;
 		case (Opcode)
 			B_TYPE: begin
 				cdb_int_unit.cdb_branch = 1'b1;
@@ -48,20 +49,14 @@ always_comb begin
 				cdb_int_unit.cdb_data	= 'b0;
 				cdb_int_unit.cdb_tag	= 'b0;
 				if(Funct3 == 'b0)
-					cdb_int_unit.cdb_branch_taken = alu_zero_w ? 'b0 : 'b1;
-				else if(Funct3 == 'b1)
 					cdb_int_unit.cdb_branch_taken = alu_zero_w ? 'b1 : 'b0;
+				else if(Funct3 == 'b1)
+					cdb_int_unit.cdb_branch_taken = alu_zero_w ? 'b0 : 'b1;
 			end
 			default: cdb_int_unit.cdb_branch = 'b0;
 		endcase
 	end
-	else begin
-		cdb_int_unit.cdb_data = 'b0;
-   		cdb_int_unit.cdb_tag = 'b0;
-   		cdb_int_unit.cdb_valid = 'b0;
-    	cdb_int_unit.cdb_branch = 'b0;
-    	cdb_int_unit.cdb_branch_taken = 'b0;
-	end
+
 end
 
 endmodule

@@ -1,0 +1,36 @@
+        nop
+        addi x2, x0, 1
+        addi x3, x0, 2
+        addi x4,  x0, 4
+        
+        addi x11, x0, 11
+        addi x12, x0, 12
+        addi x20, x0, 20
+        addi x31, x0, 31
+        
+        bne zero,x2,exit
+        
+        tag:
+        mul  x10,x11,x12
+        div  x21, x20,x4
+        sw x31,0(x2)
+        lw x30,0(x2)      
+
+        lw x30,0(x2)
+        exit:
+        jal zero, tag
+
+00400213 00200193 00100113 00000013
+01f00f93 01400a13 00c00613 00b00593
+01f12023 024a4ab3 02c58533 00201c63
+00000000 fedff06f 00012f03 00012f03
+
+
+addi x10, x0, 1
+addi x11, x0, 1
+beq x10, x11, exit
+addi x13, x0, 3
+exit: nop
+
+00b50463 00100593 00100513 00000000
+00000000 00000000 00000013 00300693

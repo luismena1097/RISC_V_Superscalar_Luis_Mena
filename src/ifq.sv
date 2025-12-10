@@ -45,7 +45,7 @@ assign PC_in_Plus_16 = PC_in + 'h10;
 //Program Counter to fetch instructions
 pc #(.WIDTH(DATA_WIDTH))program_counter_fetch(.clk(clk), .rst(rst), .enable(~fifo_full), .Data_i(PC_in_Plus_16), .Data_o(PC_in_reg));
 
-assign PC_out_i_w = branch_signal ? Jmp_branch_address : (PC_out + 'h4);
+assign PC_out_i_w = jmp_branch_valid ? Jmp_branch_address : (PC_out + 'h4);
 
 //Program Counter to do the calculation of the jump/branch
 pc #(.WIDTH(DATA_WIDTH))program_counter_out(.clk(clk), .rst(rst), .enable((rd_en | jmp_branch_valid)), .Data_i(PC_out_i_w), .Data_o(PC_out));
@@ -93,7 +93,7 @@ mux4_1 #(.WIDTH(32)) mux_bnt_instr (
 .Data1(FIFO_out[63:32]), 
 .Data2(FIFO_out[95:64]),
 .Data3(FIFO_out[127:96]), 
-.sel(rp[1:0] + 2'h1),  
+.sel(rp[1:0] + 'h1),  
 .Data_o(IFQ_bnt) 
 );
 
@@ -108,7 +108,11 @@ end
 //In case the branch was not taken 
 always_comb begin 
     IFQ_after_bnt = 'b0;
-    if(branch_nt_next_inst)
+    if(branch_nt_next_inst && jmp_branch_valid == 1'b1)
+        IFQ_after_bnt = IFQ_bnt;
+    else if(branch_nt_next_inst && jmp_branch_valid == 1'b0)
+        IFQ_after_bnt = IFQ_mux_1st_or_FIFO_inst;
+    else if(branch_nt_next_inst == 'b0 && jmp_branch_valid == 1'b1)
         IFQ_after_bnt = IFQ_bnt;
     else
         IFQ_after_bnt = IFQ_mux_1st_or_FIFO_inst;

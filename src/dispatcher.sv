@@ -53,7 +53,6 @@ logic 				rs1_valid_w;
 logic [5:0]			rs2_tag_W;
 logic 				rs2_valid_w;
 logic [4:0]			rd_regfile_rst_w;
-logic   			write_en_regfile_w;
 
 //Wire for Imm
 logic [31:0] Imm_o_w;
@@ -71,7 +70,7 @@ logic sel_data_rs1, sel_data_rs2;
 logic [31:0] rs1_data_dispatcher, rs2_data_dispatcher;
 logic [31:0] RS1_regfile, RS2_regfile;
 
-assign Instruction_2_decode = ifetch_empty_flag ? 32'b0 : ifetch_instruction;
+assign Instruction_2_decode = (ifetch_empty_flag || stall_branch) ? 32'b0 : ifetch_instruction;
 
 //Decode the instruction
 decoder instruction_decode(
@@ -89,6 +88,27 @@ addr_calc jump_branch_calc(
 .PC(ifetch_pc_plus_four), .Opcode(instr_opcode), .Imm(Imm_o_w),
 .Branch_jump_addr(Branch_jump_addr_w), .branch(branch_signal_W), .jump(jump_signal_w) 
 );
+/*logic [31:0] actual_PC;
+logic [31:0] PC_after_stall;
+
+always_ff @(posedge clk) begin
+	if(stall_branch)
+		actual_PC <= ifetch_pc_plus_four;
+end
+
+always_ff @(posedge clk) begin
+	if(!stall_branch)
+		PC_after_stall <= Branch_jump_addr_w;
+	else 
+		PC_after_stall <= PC_after_stall;	
+end
+
+always_comb begin
+	if(cdb_branch_taken)
+		dispatch_jmp_branch_addr = PC_after_stall;
+	else 
+		dispatch_jmp_branch_addr = actual_PC;
+end*/
 
 //Tag FIFO for register renaming
 tag_fifo #(.DEPTH(64), .DATA_WIDTH(6))tag_fifo_module(
@@ -121,15 +141,13 @@ rst rst_module(
 //CDB
 .cdb_valid(cdb_valid),
 .cdb_tag_rst(cdb_tag),
-.rd_regfile_rst(rd_regfile_rst_w),
-.write_en_regfile(write_en_regfile_w)
+.rd_regfile_rst(rd_regfile_rst_w)
 );
 
 //Register File
 register_file #(.ADDR(5), .WIDTH(32))RegFile_module(
 .clk(clk),
 .rst(rst),
-.reg_write(write_en_regfile_w),
 .Read_reg1(instr_rs1_addr),
 .Read_reg2(instr_rs2_addr),
 .Write_reg(rd_regfile_rst_w),
@@ -173,7 +191,6 @@ pkg_dispatch pkg_dispatch_module(
 	.Opcode(instr_opcode), .Func3(instr_func3), .Func7(instr_func7), .Imm(Imm_o_w),
 	.rs1_valid_plus_tag({rs1_valid_w,rs1_tag_W}), .rs2_valid_plus_tag({rs2_valid_w,rs2_tag_W}),
 	.rd_tag(Tagout_tf_W),
-	.branch_jump_address(Branch_jump_addr_w),
 	.stall_branch(stall_branch),
 
 	.dispatcher_2_int_queue(dispatcher_2_int_queue),
@@ -190,7 +207,7 @@ always_ff @(posedge clk or posedge rst) begin
     if (rst) begin
         stall_branch <= 1'b0;
     end 
-    else if (cdb_branch) begin
+    else if (cdb_branch && dispatch_jump_branch) begin
         // Branch resuelto, se libera el stall
         stall_branch <= 1'b0;
     end 
@@ -198,6 +215,8 @@ always_ff @(posedge clk or posedge rst) begin
         // Se detectó un branch → hacer stall por 1 ciclo
         stall_branch <= 1'b1;
     end 
+	else if (cdb_branch)
+		stall_branch <= 1'b0;	
     // else: se mantiene el valor (no poner nada)
 end
 

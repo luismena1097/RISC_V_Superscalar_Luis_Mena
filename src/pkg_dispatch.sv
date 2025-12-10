@@ -13,7 +13,6 @@ module pkg_dispatch(
 	input logic [31:0]					Imm,
 	input logic [6:0]					rs1_valid_plus_tag, rs2_valid_plus_tag,
 	input logic [5:0]					rd_tag,
-	input logic [31:0]					branch_jump_address,
 	input logic 						stall_branch,
 
 	output int_queue_data 				dispatcher_2_int_queue,

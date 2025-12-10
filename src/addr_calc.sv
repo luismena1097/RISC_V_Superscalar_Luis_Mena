@@ -18,7 +18,7 @@ module addr_calc(
 localparam logic [6:0] J_TYPE = 7'b1101111;*/
 
 always_comb begin
-Branch_jump_addr = 'b0;
+//Branch_jump_addr = 'b0;
 branch 			  = 1'b0;
 jump 				  = 1'b0;
 	case(Opcode)
@@ -36,7 +36,7 @@ jump 				  = 1'b0;
 		end
 		default:
 		begin
-			Branch_jump_addr = PC;
+			//Branch_jump_addr = PC;
 			branch 			  = 1'b0;
 			jump 				  = 1'b0;
 		end

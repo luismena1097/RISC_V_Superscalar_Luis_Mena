@@ -19,34 +19,32 @@ logic [6:0] rp;
 logic [6:0] wp;
 
 // FIFO Init
-always_ff @(posedge clk or posedge rst) begin
-    if (rst) begin
+always_comb begin
+    if(rst) begin
         rp <= 7'b0000000;
         wp <= 7'b1000000;
-		  //tagout_tf <= 'b0;
+            //tagout_tf <= 'b0;
         // inicializar FIFO (EN EL MISMO always_ff)
         for (int i = 0; i < DEPTH; i++) begin
             fifo[i] <= i;
         end
     end
-    else begin
-        // WRITES
-        if (!ff_tf && cdb_tag_tf_valid) begin
-            fifo[wp[5:0]] <= cdb_tag_tf;
-            wp <= wp + 1'b1;
-        end
 
         // READ
         if (ren_tf) begin
-            rp <= rp + 1'b1;
-				//tagout_tf <= fifo[rp[5:0]];
-				fifo[rp[5:0]] <= 'b0;
+            fifo[rp[5:0]] = 'b0;
+            rp = rp + 1'b1;
         end
-    end
+        // WRITES
+        if (!ff_tf && cdb_tag_tf_valid) begin
+            fifo[wp[5:0]] = cdb_tag_tf;
+            wp = wp + 1'b1;
+        end
+    
 end
 
 assign ef_tf = (wp == rp);
 assign ff_tf = ((wp[5:0] == rp[5:0]) & (wp[6] != rp[6]));
-assign tagout_tf = rst ? 'b0 : fifo[rp[5:0]];
+assign tagout_tf = fifo[rp[5:0]];
 
 endmodule
