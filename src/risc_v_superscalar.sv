@@ -122,7 +122,10 @@ dispatcher dispatcher_instance(
 
    .branch_nt_next_inst(branch_nt_next_inst),	
    .branch_signal(branch_signal),
-	.issueque_int_full(int_queue_full)
+	.issueque_int_full(int_queue_full),
+	.issueque_mem_full(mem_queue_full),
+	.issueque_mult_full(mult_queue_full),
+	.issueque_div_full(div_queue_full)
 );
 
 //Integer issue queue

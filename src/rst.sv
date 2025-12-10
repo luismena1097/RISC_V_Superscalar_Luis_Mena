@@ -44,7 +44,7 @@ logic [4:0] cdb_clear_addr;
         registers[cdb_clear_addr] <= 7'h0;
 end*/
 
-always_ff @(posedge clk or posedge rst) begin
+always_comb begin
     if (rst) begin
         for (int i = 0; i < 32; i++)
             registers[i] <= 7'h0;
@@ -57,20 +57,22 @@ always_ff @(posedge clk or posedge rst) begin
 end
 
 always_comb begin
-	rd_regfile_rst = 'b0;
+	//rd_regfile_rst = 'b0;
 	cdb_clear_addr  = 'b0;
 
 	if (wen0_rst) 
-		registers_aux[waddr0_rst] = wdata0_rst;
+		registers_aux[waddr0_rst] <= wdata0_rst;
 
 	if(cdb_valid) begin
 		for (int i = 0; i < 32; i++) begin
 			if(registers[i][5:0] == cdb_tag_rst) begin
-				rd_regfile_rst = i;
-				cdb_clear_addr = cdb_tag_rst;
+				rd_regfile_rst <= i;
+				cdb_clear_addr <= cdb_tag_rst;
 			end
 		end
 	end
+	else  
+		rd_regfile_rst = 'b0;
 	
 	registers_aux[cdb_clear_addr] = 7'h0;
 end

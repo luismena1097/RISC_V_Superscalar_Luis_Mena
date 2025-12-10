@@ -54,16 +54,16 @@ logic [2:0] shift_after_issue;
 assign issueque_full = queue[0].valid & queue[1].valid & queue[2].valid & queue[3].valid & !issueblk_done;
 
 //Shift and update of the queue
-always_ff @(posedge clk or posedge reset) begin
+always_comb begin
   if (reset) begin
 		for (int i=0; i<DEPTH; i++) begin
-			 queue[i] <= 'b0;
+			 queue[i] = 'b0;
 		end
   end else begin
 		//Adding the instruction from the dispatcher while the queue is not full
 		if (dispatch_enable && !issueque_full) begin
 			 for (int i=DEPTH-1; i>0; i--) begin
-				  queue[i] <= queue[i-1];     //Shift to make room for the new instruction into the first slot of the queue
+				  queue[i] = queue[i-1];     //Shift to make room for the new instruction into the first slot of the queue
 			 end
 			 //Adding the new instruction to the queue
 			 queue[0].valid   <= 1'b1;
@@ -81,22 +81,22 @@ always_ff @(posedge clk or posedge reset) begin
 		else if (issueblk_done && issueque_ready) begin
 			case (shift_after_issue)
 			  0: begin
-					queue[0] <= queue[1];
-					queue[1] <= queue[2];
-					queue[2] <= queue[3];
-					queue[3] <= '0;
+					queue[0] = queue[1];
+					queue[1] = queue[2];
+					queue[2] = queue[3];
+					queue[3] = '0;
 			  end
 			  1: begin
-					queue[1] <= queue[2];
-					queue[2] <= queue[3];
-					queue[3] <= '0;
+					queue[1] = queue[2];
+					queue[2] = queue[3];
+					queue[3] = '0;
 			  end
 			  2: begin
-					queue[2] <= queue[3];
-					queue[3] <= '0;
+					queue[2] = queue[3];
+					queue[3] = '0;
 			  end
 			  3: begin
-					queue[3] <= '0;
+					queue[3] = '0;
 			  end
 			endcase
 		end
@@ -105,12 +105,12 @@ always_ff @(posedge clk or posedge reset) begin
 			 for (int i=0; i<DEPTH; i++) begin
 				  if (queue[i].valid) begin           //If there is a valid instruction in the queue, we can check if the cdb data is for any of the instructions
 						if (!queue[i].rs_val && queue[i].rs_tag == cdb_tag) begin  //If rs1 valid = 0 and rs1 tag = cdb tag update rs1 data with CDB data
-							 queue[i].rs_data <= cdb_data;
-							 queue[i].rs_val  <= 1'b1;
+							 queue[i].rs_data = cdb_data;
+							 queue[i].rs_val  = 1'b1;
 						end
 						if (!queue[i].rt_val && queue[i].rt_tag == cdb_tag) begin //If rs2 valid = 0 and rs2 tag = cdb tag update rs2 data with CDB data
-							 queue[i].rt_data <= cdb_data;
-							 queue[i].rt_val  <= 1'b1;
+							 queue[i].rt_data = cdb_data;
+							 queue[i].rt_val  = 1'b1;
 						end
 				  end
 			 end

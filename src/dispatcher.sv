@@ -34,7 +34,10 @@ module dispatcher(
 	 output logic 					branch_nt_next_inst,
 	 output logic 					branch_signal,
 	 
-	 input logic 					issueque_int_full
+	 input logic 					issueque_int_full,
+	 input logic 					issueque_mem_full,
+	 input logic 					issueque_mult_full,
+	 input logic 					issueque_div_full
 );
 //Wire for stalling 1 cycle for jump
 logic stall_branch;
@@ -220,7 +223,7 @@ always_ff @(posedge clk or posedge rst) begin
     // else: se mantiene el valor (no poner nada)
 end
 
-assign dispatch_ren = ~stall_branch;
+assign dispatch_ren = ~stall_branch | ~issueque_int_full | ~issueque_mem_full | ~issueque_mult_full | ~issueque_div_full;
 //assign dispatch_jump_branch = jump_signal_w | cdb_branch_taken;
 assign dispatch_jmp_branch_addr = Branch_jump_addr_w;
 

@@ -28,16 +28,16 @@ logic issue_oneclk;     //Bit to signal issue_int or issue_mem
 logic [6:0] CDB_reservation_reg_aux, CDB_reservation_reg;
 
 //Changes the priority for int or mem instruction depending on the last instruction executed
-always_ff @(posedge clk or posedge rst) begin 
+always_comb begin
     if(rst)
-        lru <= 1'b1;        //Initial value for LRU
+        lru = 1'b1;        //Initial value for LRU
     else begin
         if(issue_int)
-            lru <= 1'b0;
+            lru = 1'b0;
         else if (issue_mem)
-            lru <= 1'b1;
+            lru = 1'b1;
         else 
-            lru <= lru;
+            lru = lru;
     end
 end
 
@@ -70,19 +70,19 @@ end
 
 //Shift register for CDB reservation register
 
-always_ff @(posedge clk or posedge rst) begin
+always_comb begin
     if(rst)begin
         CDB_reservation_reg <= 'b0;
     end
     else begin
         if(issue_int || issue_mem)
-            CDB_reservation_reg[0] <= 1'b1;
+            CDB_reservation_reg[0] = 1'b1;
         else if(issue_mult)
-            CDB_reservation_reg[3] <= 1'b1;
+            CDB_reservation_reg[3] = 1'b1;
         else if(issue_div)
-            CDB_reservation_reg[6] <= 1'b1;
+            CDB_reservation_reg[6] = 1'b1;
         else
-            CDB_reservation_reg <= {1'b0,CDB_reservation_reg[6:1]};
+            CDB_reservation_reg = {1'b0,CDB_reservation_reg[6:1]};
     end
 end
 

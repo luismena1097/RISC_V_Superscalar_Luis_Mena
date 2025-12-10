@@ -27,7 +27,7 @@ initial begin
   rst = 1'b0;
   #10;
   rst = 1'b1;
-  #25;
+  #20;
   rst = 1'b0;
 end
 

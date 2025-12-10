@@ -32,19 +32,21 @@ always_comb begin
 
         // READ
         if (ren_tf) begin
-            fifo[rp[5:0]] = 'b0;
+            fifo[rp[5:0]] <= 'b0;
             rp = rp + 1'b1;
         end
         // WRITES
         if (!ff_tf && cdb_tag_tf_valid) begin
             fifo[wp[5:0]] = cdb_tag_tf;
-            wp = wp + 1'b1;
+            wp <= wp + 1'b1;
         end
+
+        tagout_tf <= fifo[rp[5:0]];
     
 end
 
 assign ef_tf = (wp == rp);
 assign ff_tf = ((wp[5:0] == rp[5:0]) & (wp[6] != rp[6]));
-assign tagout_tf = fifo[rp[5:0]];
+//assign tagout_tf = fifo[rp[5:0]];
 
 endmodule

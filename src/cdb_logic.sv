@@ -56,14 +56,14 @@ always_comb begin
 
 end
 
-always_ff @(posedge clk or negedge rst) begin
+always_comb begin
     if (rst) begin
         for (int i = 0; i < 7; i++) begin
-            cdb_rsv_inst_reg[i] <= 3'b000;
+            cdb_rsv_inst_reg[i] = 3'b000;
         end
     end else begin
         for (int i = 0; i < 7; i++) begin
-            cdb_rsv_inst_reg[i] <= cdb_rsv_inst[i];
+            cdb_rsv_inst_reg[i] = cdb_rsv_inst[i];
         end
     end
 end
